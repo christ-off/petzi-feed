@@ -1,0 +1,68 @@
+name: Deploy
+
+on:
+  # push:
+  #   branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  id-token: write
+
+env:
+  AWS_REGION: eu-west-1
+  FUNCTION_NAME: petzi-feed
+  S3_BUCKET: my-petzi-feed
+  S3_KEY: petzi-feed/atom.xml
+  PETZI_ORGANISER_URL: https://www.petzi.ch/fr/organiser/143/
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment: production
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Test
+        run: npm test
+
+      - name: SonarCloud analysis
+        uses: sonarsource/sonarcloud-github-action@v3
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v6
+        with:
+          role-to-assume: arn:aws:iam::${{ secrets.AWS_ACCOUNT_ID }}:role/petzi-feed-lambda-role
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Install production dependencies
+        run: npm ci --omit=dev
+
+      - name: Configure Lambda environment
+        run: |
+          aws lambda update-function-configuration \
+            --function-name ${{ env.FUNCTION_NAME }} \
+            --environment "Variables={S3_BUCKET=${{ env.S3_BUCKET }},S3_KEY=${{ env.S3_KEY }},FEED_URL=https://${{ env.S3_BUCKET }}.s3.${{ env.AWS_REGION }}.amazonaws.com/${{ env.S3_KEY }},PETZI_ORGANISER_URL=${{ env.PETZI_ORGANISER_URL }}}"
+
+      - name: Build deployment package
+        run: |
+          zip -r function.zip src/ node_modules/ package.json -x "*.DS_Store"
+
+      - name: Update Lambda function code
+        run: |
+          aws lambda update-function-code \
+            --function-name ${{ env.FUNCTION_NAME }} \
+            --zip-file fileb://function.zip

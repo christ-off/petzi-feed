@@ -1,0 +1,122 @@
+import { parse } from "node-html-parser";
+
+const BASE_URL = "https://www.petzi.ch";
+
+const ORGANISER_URL =
+  process.env.PETZI_ORGANISER_URL ?? `${BASE_URL}/fr/organiser/143/`;
+
+const HEADERS = {
+  "User-Agent": "Mozilla/5.0 (compatible; PontRouge-RSS/1.0)",
+  Accept: "text/html",
+};
+
+/**
+ * @typedef {Object} Event
+ * @property {string} title
+ * @property {string} dateIso   - ISO 8601, e.g. "2026-06-02T19:30:00+02:00"
+ * @property {string} description
+ * @property {string|null} imageUrl
+ * @property {string} eventUrl
+ * @property {string|null} ticketUrl
+ * @property {string|null} price
+ * @property {string[]} genres
+ */
+
+/**
+ * Fetch organiser page and return all event detail URLs.
+ * @param {typeof fetch} fetcher
+ * @returns {Promise<string[]>}
+ */
+export async function getEventUrls(fetcher = fetch) {
+  const resp = await fetcher(ORGANISER_URL, { headers: HEADERS });
+  if (!resp.ok) throw new Error(`HTTP ${resp.status} on organiser page`);
+
+  const root = parse(await resp.text());
+  const seen = new Set();
+  const urls = [];
+
+  for (const a of root.querySelectorAll("a[href*='/fr/events/']")) {
+    const href = a.getAttribute("href");
+    if (href && !seen.has(href)) {
+      seen.add(href);
+      urls.push(href.startsWith("/") ? `${BASE_URL}${href}` : href);
+    }
+  }
+
+  return urls;
+}
+
+/**
+ * Parse a single event detail page.
+ * @param {string} url
+ * @param {typeof fetch} fetcher
+ * @returns {Promise<Event|null>}
+ */
+export async function parseEvent(url, fetcher = fetch) {
+  const resp = await fetcher(url, { headers: HEADERS });
+  if (!resp.ok) throw new Error(`HTTP ${resp.status} on ${url}`);
+
+  const root = parse(await resp.text());
+
+  const title = root.querySelector("h1")?.text?.trim();
+  if (!title) return null;
+
+  const dateIso = parseDateFromGcal(root) ?? parseDateFromHeading(root);
+
+  const description = root
+    .querySelectorAll("p")
+    .map((p) => p.text.trim())
+    .filter((t) => t.length > 40)
+    .join("\n\n");
+
+  const imageUrl =
+    root.querySelector("meta[property='og:image']")?.getAttribute("content") ?? null;
+
+  const ticketHref =
+    root.querySelector("a[href*='/tickets/']")?.getAttribute("href") ?? null;
+  const ticketUrl = ticketHref
+    ? ticketHref.startsWith("/") ? `${BASE_URL}${ticketHref}` : ticketHref
+    : null;
+
+  const priceText = root.querySelector("h4")?.text ?? "";
+  const price = priceText.includes("CHF") ? priceText.trim() : null;
+
+  const genres = root
+    .querySelectorAll("a[href*='/search/?q=']")
+    .map((a) => a.text.trim())
+    .filter(Boolean);
+
+  return { title, dateIso, description, imageUrl, eventUrl: url, ticketUrl, price, genres };
+}
+
+/**
+ * Fetch all events, failing silently on individual page errors.
+ * @param {typeof fetch} fetcher
+ * @returns {Promise<Event[]>}
+ */
+export async function fetchAllEvents(fetcher = fetch) {
+  const urls = await getEventUrls(fetcher);
+
+  const results = await Promise.allSettled(
+    urls.map((url) => parseEvent(url, fetcher))
+  );
+
+  return results
+    .filter((r) => r.status === "fulfilled" && r.value !== null)
+    .map((r) => r.value);
+}
+
+// --- Helpers ---
+
+function parseDateFromGcal(root) {
+  const href = root.querySelector("a[href*='calendar.google.com']")?.getAttribute("href");
+  const match = href?.match(/dates=(\d{8}T\d{6})/);
+  if (!match) return null;
+
+  const r = match[1]; // e.g. "20260602T193000"
+  return `${r.slice(0, 4)}-${r.slice(4, 6)}-${r.slice(6, 8)}T${r.slice(9, 11)}:${r.slice(11, 13)}:${r.slice(13, 15)}+02:00`;
+}
+
+function parseDateFromHeading(root) {
+  return root.querySelector("h3")?.text?.trim() ?? null;
+}
