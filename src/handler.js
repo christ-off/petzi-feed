@@ -12,7 +12,8 @@ export async function handler(event, context) {
   const events = await fetchAllEvents();
   console.log(`Found ${events.length} events`);
 
-  const feed = buildAtomFeed(events, FEED_URL);
+  const venueName = process.env.VENUE_NAME ?? "Pont Rouge";
+  const feed = buildAtomFeed(events, FEED_URL, venueName);
 
   await s3.send(new PutObjectCommand({
     Bucket: BUCKET,
