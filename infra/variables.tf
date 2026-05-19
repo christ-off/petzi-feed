@@ -39,3 +39,9 @@ variable "feed_url" {
   type        = string
   default     = ""
 }
+
+variable "github_repo" {
+  description = "GitHub repo allowed to assume the deploy role (format: owner/repo)"
+  type        = string
+  default     = "christ-off/petzi-feed"
+}

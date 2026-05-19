@@ -22,3 +22,8 @@ output "eventbridge_rule_arn" {
   description = "ARN of the EventBridge rule"
   value       = aws_cloudwatch_event_rule.petzi_feed_daily.arn
 }
+
+output "deploy_role_arn" {
+  description = "ARN of the GitHub Actions deploy role — set as AWS_ROLE_ARN secret in GitHub"
+  value       = aws_iam_role.petzi_feed_deploy.arn
+}
