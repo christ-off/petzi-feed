@@ -2,6 +2,8 @@
 
 Concert RSS/Atom feeds, generated automatically by scraping [petzi.ch](https://www.petzi.ch).
 
+[![Deploy](https://github.com/christ-off/petzi-feed/actions/workflows/deploy.yml/badge.svg)](https://github.com/christ-off/petzi-feed/actions/workflows/deploy.yml) [![Quality Gate Status](https://sonarcloud.io/api/project_badges/measure?project=christ-off_petzi-feed&metric=alert_status)](https://sonarcloud.io/summary/new_code?id=christ-off_petzi-feed) [![Coverage](https://sonarcloud.io/api/project_badges/measure?project=christ-off_petzi-feed&metric=coverage)](https://sonarcloud.io/summary/new_code?id=christ-off_petzi-feed)
+
 ## Overview
 
 Scrape venue pages on Petzi, extract concert details (title, date, description, images, ticket links, genres, prices), build Atom 1.0 feeds, and publish them to an S3 bucket. Runs daily via EventBridge.
