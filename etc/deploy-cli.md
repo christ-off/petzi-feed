@@ -4,16 +4,13 @@ Use Terraform to provision and manage all AWS infrastructure in a single declara
 
 ## Prerequisites
 
-Terraform uses the default AWS CLI credentials. If your credentials come from a login tool (Leapp, aws-vault, etc.), export them before each session:
+Terraform uses the default AWS CLI credentials. Add this alias to `~/.zshrc` once:
 
 ```bash
-eval "$(aws configure export-credentials --format env)"
+alias aws-refresh='unset AWS_ACCESS_KEY_ID AWS_SECRET_ACCESS_KEY AWS_SESSION_TOKEN AWS_CREDENTIAL_EXPIRATION && aws login && eval "$(aws configure export-credentials --format env)"'
 ```
 
-> **Note:** credentials from a login tool expire during long sessions. If any AWS command fails with a credentials error, re-export before retrying:
-> ```bash
-> eval "$(aws configure export-credentials --format env)"
-> ```
+Then run `aws-refresh` before any Terraform or AWS CLI work. Without unsetting first, re-running `export-credentials` silently re-exports the already-expired credentials from the environment instead of reading the fresh login cache.
 
 ## First-time setup
 
