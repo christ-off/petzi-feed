@@ -4,3 +4,8 @@ coverage/
 .DS_Store
 function.zip
 atom.xml
+infra/build/
+infra/.terraform/
+infra/terraform.tfstate
+infra/terraform.tfstate.backup
+*.xml

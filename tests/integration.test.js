@@ -16,12 +16,12 @@ describe("integration - live organiser page", () => {
   });
 
   it("has at least one event", async () => {
-    const events = await fetchAllEvents(undefined, fetch);
+    const events = await fetchAllEvents(fetch, undefined);
     expect(events.length).toBeGreaterThanOrEqual(1);
   });
 
   it("feed title contains Pont Rouge", async () => {
-    const events = await fetchAllEvents(undefined, fetch);
+    const events = await fetchAllEvents(fetch, undefined);
     const feed = buildAtomFeed(events, "https://example.com/atom.xml", "Pont Rouge");
     expect(feed).toContain("<title>Pont Rouge — Concerts</title>");
     expect(feed).toContain("<author><name>Pont Rouge</name></author>");

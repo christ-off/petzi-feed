@@ -117,4 +117,16 @@ describe("buildAtomFeed", () => {
     expect(xml).toContain("<feed");
     expect(xml).not.toContain("<entry>");
   });
+
+  it("uses custom siteUrl in alternate link", () => {
+    const xml = buildAtomFeed(
+      [MOCK_EVENT], "https://example.com/atom.xml", "Other Venue", "https://www.other-venue.ch"
+    );
+    expect(xml).toContain('<link href="https://www.other-venue.ch" rel="alternate"/>');
+  });
+
+  it("uses default siteUrl when omitted", () => {
+    const xml = buildAtomFeed([MOCK_EVENT], "https://example.com/atom.xml", venueName);
+    expect(xml).toContain('<link href="https://www.petzi.ch" rel="alternate"/>');
+  });
 });

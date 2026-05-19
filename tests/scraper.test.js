@@ -1,5 +1,5 @@
 import { describe, it, expect, vi } from "vitest";
-import { getEventUrls, parseEvent, fetchAllEvents } from "../src/scraper.js";
+import { getEventUrls, parseEvent, fetchAllEvents, fetchVenueMetadata } from "../src/scraper.js";
 
 const ORGANISER_HTML = `
 <html><body>
@@ -25,6 +25,9 @@ const EVENT_HTML = `
   <a href="/fr/search/?q=rock">Rock</a>
   <p>High Vis fait partie de ces groupes impossibles à enfermer dans une seule case.</p>
   <p>Déjà aperçu sur les scènes des plus grands festivals européens.</p>
+  <p>High Vis fait partie de ces groupes impossibles à enfermer dans une seule case.</p>
+  <p>PETZI - Fédération suisse des clubs et des festivals de musiques actuelles</p>
+  <p>    Design by KANULART</p>
   <p>ok</p>
 </body></html>`;
 
@@ -62,6 +65,18 @@ describe("parseEvent", () => {
     expect(event.description).not.toContain("ok");
   });
 
+  it("deduplicates repeated paragraphs", async () => {
+    const event = await parseEvent("https://x.com/e/1", makeFetcher(EVENT_HTML));
+    const count = (event.description.match(/impossibles à enfermer/g) ?? []).length;
+    expect(count).toBe(1);
+  });
+
+  it("strips PETZI and KANULART boilerplate", async () => {
+    const event = await parseEvent("https://x.com/e/1", makeFetcher(EVENT_HTML));
+    expect(event.description).not.toContain("PETZI");
+    expect(event.description).not.toContain("KANULART");
+  });
+
   it("returns null if no h1 found", async () => {
     const event = await parseEvent("https://x.com/e/1", makeFetcher("<html><body><p>nothing</p></body></html>"));
     expect(event).toBeNull();
@@ -96,5 +111,52 @@ describe("fetchAllEvents", () => {
 
     const events = await fetchAllEvents(fetcher);
     expect(events).toHaveLength(1);
+  });
+
+  it("uses provided organiserUrl instead of default", async () => {
+    const otherVenueHtml = `
+    <html><body>
+      <a href="/fr/events/99999-other-venue/">Other Event</a>
+    </body></html>`;
+    const fetcher = vi.fn().mockImplementation(async (url) => ({
+      ok: true,
+      text: async () => url.includes("organiser") ? otherVenueHtml : EVENT_HTML,
+    }));
+
+    const events = await fetchAllEvents(fetcher, "https://www.petzi.ch/fr/organiser/999/");
+    expect(events).toHaveLength(1);
+    expect(events[0].title).toBe("High Vis + Support");
+  });
+});
+
+describe("fetchVenueMetadata", () => {
+  it("extracts venue name and siteUrl from h1 with external link", async () => {
+    const html = `<html><body><h1>Pont Rouge <a class="icon-external-link" href="http://www.pontrouge.ch">Voir le site officiel</a></h1></body></html>`;
+    const result = await fetchVenueMetadata(makeFetcher(html), "https://www.petzi.ch/fr/organiser/143/");
+    expect(result.venueName).toBe("Pont Rouge");
+    expect(result.siteUrl).toBe("http://www.pontrouge.ch");
+  });
+
+  it("extracts venue name without external link", async () => {
+    const html = `<html><body><h1>Le Motorate</h1></body></html>`;
+    const result = await fetchVenueMetadata(makeFetcher(html), "https://www.petzi.ch/fr/organiser/55/");
+    expect(result.venueName).toBe("Le Motorate");
+    expect(result.siteUrl).toBeNull();
+  });
+
+  it("strips 'Voir le site officiel' from venue name", async () => {
+    const html = `<html><body><h1>Pont Rouge    Voir le site officiel</h1></body></html>`;
+    const result = await fetchVenueMetadata(makeFetcher(html), "https://www.petzi.ch/fr/organiser/143/");
+    expect(result.venueName).toBe("Pont Rouge");
+  });
+
+  it("throws when no h1 found", async () => {
+    const html = `<html><body><p>No heading</p></body></html>`;
+    await expect(fetchVenueMetadata(makeFetcher(html), "https://x.com/")).rejects.toThrow("No h1 found");
+  });
+
+  it("throws on non-200 response", async () => {
+    const fetcher = vi.fn().mockResolvedValue({ ok: false, status: 503 });
+    await expect(fetchVenueMetadata(fetcher, "https://x.com/")).rejects.toThrow("HTTP 503");
   });
 });

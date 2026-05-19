@@ -2,13 +2,15 @@ import { parse } from "node-html-parser";
 
 const BASE_URL = "https://www.petzi.ch";
 
-const ORGANISER_URL =
+const DEFAULT_ORGANISER_URL =
   process.env.PETZI_ORGANISER_URL ?? `${BASE_URL}/fr/organiser/143/`;
 
 const HEADERS = {
   "User-Agent": "Mozilla/5.0 (compatible; PontRouge-RSS/1.0)",
   Accept: "text/html",
 };
+
+const BOILERPLATE = /PETZI\s*[-–]|Design by KANULART/i;
 
 /**
  * @typedef {Object} Event
@@ -27,8 +29,8 @@ const HEADERS = {
  * @param {typeof fetch} fetcher
  * @returns {Promise<string[]>}
  */
-export async function getEventUrls(fetcher = fetch) {
-  const resp = await fetcher(ORGANISER_URL, { headers: HEADERS });
+export async function getEventUrls(fetcher = fetch, organiserUrl = DEFAULT_ORGANISER_URL) {
+  const resp = await fetcher(organiserUrl, { headers: HEADERS });
   if (!resp.ok) throw new Error(`HTTP ${resp.status} on organiser page`);
 
   const root = parse(await resp.text());
@@ -63,10 +65,17 @@ export async function parseEvent(url, fetcher = fetch) {
 
   const dateIso = parseDateFromGcal(root) ?? parseDateFromHeading(root);
 
+  const seen = new Set();
   const description = root
     .querySelectorAll("p")
     .map((p) => p.text.trim())
-    .filter((t) => t.length > 40)
+    .filter((t) => {
+      if (t.length <= 40) return false;
+      if (BOILERPLATE.test(t)) return false;
+      if (seen.has(t)) return false;
+      seen.add(t);
+      return true;
+    })
     .join("\n\n");
 
   const imageUrl =
@@ -94,8 +103,8 @@ export async function parseEvent(url, fetcher = fetch) {
  * @param {typeof fetch} fetcher
  * @returns {Promise<Event[]>}
  */
-export async function fetchAllEvents(fetcher = fetch) {
-  const urls = await getEventUrls(fetcher);
+export async function fetchAllEvents(fetcher = fetch, organiserUrl = DEFAULT_ORGANISER_URL) {
+  const urls = await getEventUrls(fetcher, organiserUrl);
 
   const results = await Promise.allSettled(
     urls.map((url) => parseEvent(url, fetcher))
@@ -104,6 +113,27 @@ export async function fetchAllEvents(fetcher = fetch) {
   return results
     .filter((r) => r.status === "fulfilled" && r.value !== null)
     .map((r) => r.value);
+}
+
+/**
+ * Fetch organiser page and extract venue metadata (h1 title + external link).
+ * @param {typeof fetch} fetcher
+ * @param {string} organiserUrl
+ * @returns {Promise<{ venueName: string, siteUrl: string }>}
+ */
+export async function fetchVenueMetadata(fetcher = fetch, organiserUrl) {
+  const resp = await fetcher(organiserUrl, { headers: HEADERS });
+  if (!resp.ok) throw new Error(`HTTP ${resp.status} fetching metadata from ${organiserUrl}`);
+
+  const root = parse(await resp.text());
+  const h1 = root.querySelector("h1");
+  if (!h1) throw new Error(`No h1 found on ${organiserUrl}`);
+
+  const siteUrl = h1.querySelector("a.icon-external-link")?.getAttribute("href") ?? null;
+  const venueName = h1.text?.replace(/Voir le site officiel/g, "").trim();
+  if (!venueName) throw new Error(`No venue name found on ${organiserUrl}`);
+
+  return { venueName, siteUrl };
 }
 
 // --- Helpers ---

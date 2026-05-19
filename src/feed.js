@@ -3,17 +3,19 @@
  * @param {import('./scraper.js').Event[]} events
  * @param {string} feedUrl - Public self URL of this feed
  * @param {string} venueName - Display name of the venue
+ * @param {string} siteUrl - Venue website URL for the alternate link
  * @returns {string}
  */
-export function buildAtomFeed(events, feedUrl, venueName = "Pont Rouge") {
+export function buildAtomFeed(events, feedUrl, venueName = "Pont Rouge", siteUrl = "https://www.petzi.ch") {
   const updated = new Date().toISOString();
+  const resolvedSiteUrl = siteUrl ?? "https://www.petzi.ch";
 
   return `<?xml version="1.0" encoding="utf-8"?>
 <feed xmlns="http://www.w3.org/2005/Atom"
       xmlns:media="http://search.yahoo.com/mrss/">
   <title>${esc(venueName)} — Concerts</title>
   <id>${feedUrl}</id>
-  <link href="https://www.pontrouge.ch" rel="alternate"/>
+  <link href="${esc(resolvedSiteUrl)}" rel="alternate"/>
   <link href="${feedUrl}" rel="self"/>
   <updated>${updated}</updated>
   <author><name>${esc(venueName)}</name></author>

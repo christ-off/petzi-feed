@@ -13,8 +13,7 @@ env:
   AWS_REGION: eu-west-1
   FUNCTION_NAME: petzi-feed
   S3_BUCKET: my-petzi-feed
-  S3_KEY: petzi-feed/atom.xml
-  PETZI_ORGANISER_URL: https://www.petzi.ch/fr/organiser/143/
+  FEEDS_CONFIG: '[{"organiserUrl":"https://www.petzi.ch/fr/organiser/143/","s3Key":"feeds/pont-rouge-atom.xml"}]'
 
 jobs:
   deploy:
@@ -55,7 +54,7 @@ jobs:
         run: |
           aws lambda update-function-configuration \
             --function-name ${{ env.FUNCTION_NAME }} \
-            --environment "Variables={S3_BUCKET=${{ env.S3_BUCKET }},S3_KEY=${{ env.S3_KEY }},FEED_URL=https://${{ env.S3_BUCKET }}.s3.${{ env.AWS_REGION }}.amazonaws.com/${{ env.S3_KEY }},PETZI_ORGANISER_URL=${{ env.PETZI_ORGANISER_URL }}}"
+            --environment "Variables={S3_BUCKET=${{ env.S3_BUCKET }},FEEDS_CONFIG=${{ env.FEEDS_CONFIG }}}"
 
       - name: Build deployment package
         run: |
