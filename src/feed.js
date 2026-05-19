@@ -35,7 +35,7 @@ function buildEntry(event) {
     : "";
 
   const priceHtml = price ? `<p><strong>Prix:</strong> ${esc(price)}</p>` : "";
-  const body = description.replace(/\n\n/g, "</p><p>");
+  const body = description.replaceAll("\n\n", "</p><p>");
   const contentHtml = esc(`${priceHtml}<p>${body}</p>`);
 
   const categoryTags = genres.length
@@ -57,8 +57,8 @@ function buildEntry(event) {
 
 function esc(str) {
   return String(str)
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;")
-    .replace(/"/g, "&quot;");
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;");
 }

@@ -31,6 +31,7 @@ describe("integration - live organiser page", () => {
     const eventUrls = await getEventUrls(fetch);
     expect(eventUrls.length).toBeGreaterThanOrEqual(1);
 
+    let found = false;
     for (const url of eventUrls) {
       const resp = await fetch(url);
       expect(resp.ok).toBe(true);
@@ -38,9 +39,10 @@ describe("integration - live organiser page", () => {
       const root = parse(html);
       const tagList = root.querySelector("section.tag-list");
       if (tagList && tagList.text.includes("Concert")) {
-        return expect(true).toBe(true);
+        found = true;
+        break;
       }
     }
-    expect.fail("No event page contained 'Concert' in a <section class=\"tag-list\">");
+    expect(found, "No event page contained 'Concert' in a <section class=\"tag-list\">").toBe(true);
   });
 });

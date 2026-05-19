@@ -83,9 +83,10 @@ export async function parseEvent(url, fetcher = fetch) {
 
   const ticketHref =
     root.querySelector("a[href*='/tickets/']")?.getAttribute("href") ?? null;
-  const ticketUrl = ticketHref
-    ? ticketHref.startsWith("/") ? `${BASE_URL}${ticketHref}` : ticketHref
-    : null;
+  let ticketUrl = null;
+  if (ticketHref) {
+    ticketUrl = ticketHref.startsWith("/") ? `${BASE_URL}${ticketHref}` : ticketHref;
+  }
 
   const priceText = root.querySelector("h4")?.text ?? "";
   const price = priceText.includes("CHF") ? priceText.trim() : null;
@@ -121,7 +122,7 @@ export async function fetchAllEvents(fetcher = fetch, organiserUrl = DEFAULT_ORG
  * @param {string} organiserUrl
  * @returns {Promise<{ venueName: string, siteUrl: string }>}
  */
-export async function fetchVenueMetadata(fetcher = fetch, organiserUrl) {
+export async function fetchVenueMetadata(organiserUrl, fetcher = fetch) {
   const resp = await fetcher(organiserUrl, { headers: HEADERS });
   if (!resp.ok) throw new Error(`HTTP ${resp.status} fetching metadata from ${organiserUrl}`);
 
@@ -130,7 +131,7 @@ export async function fetchVenueMetadata(fetcher = fetch, organiserUrl) {
   if (!h1) throw new Error(`No h1 found on ${organiserUrl}`);
 
   const siteUrl = h1.querySelector("a.icon-external-link")?.getAttribute("href") ?? null;
-  const venueName = h1.text?.replace(/Voir le site officiel/g, "").trim();
+  const venueName = h1.text?.replaceAll("Voir le site officiel", "").trim();
   if (!venueName) throw new Error(`No venue name found on ${organiserUrl}`);
 
   return { venueName, siteUrl };

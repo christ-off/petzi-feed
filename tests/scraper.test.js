@@ -132,31 +132,31 @@ describe("fetchAllEvents", () => {
 describe("fetchVenueMetadata", () => {
   it("extracts venue name and siteUrl from h1 with external link", async () => {
     const html = `<html><body><h1>Pont Rouge <a class="icon-external-link" href="http://www.pontrouge.ch">Voir le site officiel</a></h1></body></html>`;
-    const result = await fetchVenueMetadata(makeFetcher(html), "https://www.petzi.ch/fr/organiser/143/");
+    const result = await fetchVenueMetadata("https://www.petzi.ch/fr/organiser/143/", makeFetcher(html));
     expect(result.venueName).toBe("Pont Rouge");
     expect(result.siteUrl).toBe("http://www.pontrouge.ch");
   });
 
   it("extracts venue name without external link", async () => {
     const html = `<html><body><h1>Le Motorate</h1></body></html>`;
-    const result = await fetchVenueMetadata(makeFetcher(html), "https://www.petzi.ch/fr/organiser/55/");
+    const result = await fetchVenueMetadata("https://www.petzi.ch/fr/organiser/55/", makeFetcher(html));
     expect(result.venueName).toBe("Le Motorate");
     expect(result.siteUrl).toBeNull();
   });
 
   it("strips 'Voir le site officiel' from venue name", async () => {
     const html = `<html><body><h1>Pont Rouge    Voir le site officiel</h1></body></html>`;
-    const result = await fetchVenueMetadata(makeFetcher(html), "https://www.petzi.ch/fr/organiser/143/");
+    const result = await fetchVenueMetadata("https://www.petzi.ch/fr/organiser/143/", makeFetcher(html));
     expect(result.venueName).toBe("Pont Rouge");
   });
 
   it("throws when no h1 found", async () => {
     const html = `<html><body><p>No heading</p></body></html>`;
-    await expect(fetchVenueMetadata(makeFetcher(html), "https://x.com/")).rejects.toThrow("No h1 found");
+    await expect(fetchVenueMetadata("https://x.com/", makeFetcher(html))).rejects.toThrow("No h1 found");
   });
 
   it("throws on non-200 response", async () => {
     const fetcher = vi.fn().mockResolvedValue({ ok: false, status: 503 });
-    await expect(fetchVenueMetadata(fetcher, "https://x.com/")).rejects.toThrow("HTTP 503");
+    await expect(fetchVenueMetadata("https://x.com/", fetcher)).rejects.toThrow("HTTP 503");
   });
 });

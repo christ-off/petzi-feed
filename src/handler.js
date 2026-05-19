@@ -30,7 +30,7 @@ export async function handler(event, context) {
     for (const feed of config) {
       const { organiserUrl, s3Key } = feed;
       try {
-        const { venueName, siteUrl } = await fetchVenueMetadata(fetch, organiserUrl);
+        const { venueName, siteUrl } = await fetchVenueMetadata(organiserUrl, fetch);
         console.log(`Scraping ${organiserUrl} for venue ${venueName}`);
         const events = await fetchAllEvents(fetch, organiserUrl);
         console.log(`Found ${events.length} events for ${venueName}`);
