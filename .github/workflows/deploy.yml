@@ -54,9 +54,12 @@ jobs:
 
       - name: Configure Lambda environment
         run: |
+          export FUNCTION_NAME="${{ env.FUNCTION_NAME }}"
+          export S3_BUCKET="${{ env.S3_BUCKET }}"
+          export FEEDS_CONFIG="${{ env.FEEDS_CONFIG }}"
           aws lambda update-function-configuration \
-            --function-name ${{ env.FUNCTION_NAME }} \
-            --environment "Variables={S3_BUCKET=${{ env.S3_BUCKET }},FEEDS_CONFIG=${{ env.FEEDS_CONFIG }}}"
+            --function-name "$FUNCTION_NAME" \
+            --environment "Variables={S3_BUCKET=\"$S3_BUCKET\",FEEDS_CONFIG=\"$FEEDS_CONFIG\"}"
 
       - name: Build deployment package
         run: |
