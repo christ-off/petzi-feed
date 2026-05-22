@@ -12,7 +12,7 @@ resource "aws_s3_bucket_versioning" "petzi_feed" {
   bucket = aws_s3_bucket.petzi_feed.id
 
   versioning_configuration {
-    status = "Enabled"
+    status = "Suspended"
   }
 }
 
