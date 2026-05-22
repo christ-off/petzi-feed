@@ -31,14 +31,92 @@ resource "aws_s3_bucket_policy" "petzi_feed" {
 
   policy = jsonencode({
     Version = "2012-10-17"
-    Statement = [{
-      Sid       = "PublicRead"
-      Effect    = "Allow"
-      Principal = "*"
-      Action    = "s3:GetObject"
-      Resource  = "${aws_s3_bucket.petzi_feed.arn}/*"
-    }]
+    Statement = [
+      {
+        Sid    = "AllowCloudFrontOAC"
+        Effect = "Allow"
+        Principal = {
+          Service = "cloudfront.amazonaws.com"
+        }
+        Action   = "s3:GetObject"
+        Resource = "${aws_s3_bucket.petzi_feed.arn}/*"
+        Condition = {
+          StringEquals = {
+            "AWS:SourceArn" = aws_cloudfront_distribution.petzi_feed.arn
+          }
+        }
+      }
+    ]
   })
+}
+
+resource "aws_cloudfront_origin_access_control" "petzi_feed" {
+  name                              = "${var.lambda_function_name}-cf-oac"
+  description                       = "Origin access control for CloudFront"
+  origin_access_control_origin_type = "s3"
+  signing_behavior                  = "always"
+  signing_protocol                  = "sigv4"
+}
+
+resource "aws_cloudfront_distribution" "petzi_feed" {
+  comment = "CloudFront for ${var.lambda_function_name} feeds"
+
+  origin {
+    domain_name = aws_s3_bucket.petzi_feed.bucket_regional_domain_name
+    origin_id   = "s3-${var.s3_bucket_name}"
+
+    origin_access_control_id = aws_cloudfront_origin_access_control.petzi_feed.id
+  }
+
+  enabled     = true
+  price_class = "PriceClass_All"
+
+  default_root_object = "feeds/pont-rouge-atom.xml"
+
+  default_cache_behavior {
+    allowed_methods        = ["GET", "HEAD"]
+    cached_methods         = ["GET", "HEAD"]
+    target_origin_id       = "s3-${var.s3_bucket_name}"
+    compress               = true
+    cache_policy_id        = "658327ea-f89d-4fab-a63d-7e88639e58f6" # Managed-CachingOptimized
+    viewer_protocol_policy = "redirect-to-https"
+  }
+
+  custom_error_response {
+    error_code            = 403
+    error_caching_min_ttl = 300
+    response_code         = 200
+    response_page_path    = "/feeds/pont-rouge-atom.xml"
+  }
+
+  custom_error_response {
+    error_code            = 404
+    error_caching_min_ttl = 300
+    response_code         = 200
+    response_page_path    = "/feeds/pont-rouge-atom.xml"
+  }
+
+  restrictions {
+    geo_restriction {
+      restriction_type = "whitelist"
+      locations = [
+        "US", "CA", "MX",
+        "GB", "DE", "FR", "IT", "ES", "NL", "BE", "AT", "PT",
+        "SE", "NO", "DK", "FI", "PL", "CZ", "HU", "RO", "BG",
+        "HR", "SK", "SI", "LT", "LV", "EE", "IE", "GR", "CY",
+        "MT", "LU"
+      ]
+    }
+  }
+
+  viewer_certificate {
+    cloudfront_default_certificate = true
+    ssl_support_method             = "sni-only"
+  }
+
+  tags = {
+    Name = var.lambda_function_name
+  }
 }
 
 resource "aws_s3_bucket_server_side_encryption_configuration" "petzi_feed" {
@@ -46,7 +124,7 @@ resource "aws_s3_bucket_server_side_encryption_configuration" "petzi_feed" {
 
   rule {
     apply_server_side_encryption_by_default {
-      sse_algorithm = "aws:kms"
+      sse_algorithm = "AES256"
     }
   }
 }
@@ -76,8 +154,8 @@ resource "aws_iam_role_policy" "petzi_feed_lambda" {
     Version = "2012-10-17"
     Statement = [
       {
-        Effect = "Allow"
-        Action = ["s3:PutObject"]
+        Effect   = "Allow"
+        Action   = ["s3:PutObject"]
         Resource = "${aws_s3_bucket.petzi_feed.arn}/*"
       },
       {

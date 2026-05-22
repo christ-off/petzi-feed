@@ -1,6 +1,6 @@
 # Deploy — Terraform
 
-Use Terraform to provision and manage all AWS infrastructure in a single declarative file.
+Use Terraform to provision and manage all AWS infrastructure in the `infra/` directory.
 
 ## Prerequisites
 
@@ -21,7 +21,8 @@ terraform apply
 ```
 
 This creates:
-- **S3 bucket** (`my-petzi-feed`) with versioning, encryption, and public read
+- **S3 bucket** (`my-petzi-feed`) with versioning suspended, encryption, and public read
+- **CloudFront distribution** with OAC, serving feeds via `https://<domain>/feeds/pont-rouge-atom.xml`
 - **IAM role** for the Lambda with S3 PutObject + CloudWatch Logs permissions
 - **Lambda function** (`petzi-feed`), zipped from `src/`
 - **EventBridge rule** (`petzi-feed-daily`), runs daily at 07:00 UTC
@@ -34,6 +35,16 @@ The Lambda runs daily at 07:00 UTC. To populate the feed immediately after deplo
 ```bash
 aws lambda invoke --function-name petzi-feed /tmp/out.json && cat /tmp/out.json
 ```
+
+## CloudFront feed URL
+
+After apply, the feed is available at:
+
+```bash
+terraform output -raw cloudfront_feed_url
+```
+
+Distribution is restricted to North America and Europe.
 
 ## Updating the Lambda code
 

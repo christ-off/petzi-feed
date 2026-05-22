@@ -27,3 +27,13 @@ output "deploy_role_arn" {
   description = "ARN of the GitHub Actions deploy role — set as AWS_ROLE_ARN secret in GitHub"
   value       = aws_iam_role.petzi_feed_deploy.arn
 }
+
+output "cloudfront_domain_name" {
+  description = "CloudFront domain name"
+  value       = aws_cloudfront_distribution.petzi_feed.domain_name
+}
+
+output "cloudfront_feed_url" {
+  description = "Public URL of the primary feed via CloudFront"
+  value       = "https://${aws_cloudfront_distribution.petzi_feed.domain_name}/feeds/pont-rouge-atom.xml"
+}
