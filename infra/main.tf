@@ -99,6 +99,7 @@ resource "aws_cloudfront_distribution" "petzi_feed" {
   restrictions {
     geo_restriction {
       restriction_type = "none"
+      locations        = []
     }
   }
 
