@@ -70,3 +70,13 @@ jobs:
           aws lambda update-function-code \
             --function-name ${{ env.FUNCTION_NAME }} \
             --zip-file fileb://function.zip
+
+      - name: Invoke Lambda function
+        run: |
+          # Wait for new code to become active
+          sleep 10
+          aws lambda invoke \
+            --function-name ${{ env.FUNCTION_NAME }} \
+            --payload '{}' \
+            /tmp/lambda-response.json
+          cat /tmp/lambda-response.json
