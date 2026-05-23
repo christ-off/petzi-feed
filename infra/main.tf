@@ -213,7 +213,7 @@ resource "aws_iam_role_policy" "petzi_feed_deploy" {
     Statement = [
       {
         Effect   = "Allow"
-        Action   = ["lambda:UpdateFunctionCode", "lambda:UpdateFunctionConfiguration"]
+        Action   = ["lambda:InvokeFunction", "lambda:UpdateFunctionCode", "lambda:UpdateFunctionConfiguration"]
         Resource = "arn:aws:lambda:${var.aws_region}:${data.aws_caller_identity.current.account_id}:function:${var.lambda_function_name}"
       }
     ]
