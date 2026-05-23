@@ -42,6 +42,7 @@ export async function handler(event, context) {
           Body: atom,
           ContentType: "application/atom+xml; charset=utf-8",
           CacheControl: "max-age=3600",
+          ServerSideEncryption: "AES256",
         }));
         console.log(`Published to s3://${bucket}/${s3Key}`);
         results.push({ venue: venueName, status: "success", eventCount: events.length });
@@ -74,6 +75,7 @@ export async function handler(event, context) {
     Body: feed,
     ContentType: "application/atom+xml; charset=utf-8",
     CacheControl: "max-age=3600",
+    ServerSideEncryption: "AES256",
   }));
 
   console.log(`Published to s3://${bucket}/${key}`);
