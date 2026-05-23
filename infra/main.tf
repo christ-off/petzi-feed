@@ -98,14 +98,7 @@ resource "aws_cloudfront_distribution" "petzi_feed" {
 
   restrictions {
     geo_restriction {
-      restriction_type = "whitelist"
-      locations = [
-        "US", "CA", "MX",
-        "GB", "DE", "FR", "IT", "ES", "NL", "BE", "AT", "PT",
-        "SE", "NO", "DK", "FI", "PL", "CZ", "HU", "RO", "BG",
-        "HR", "SK", "SI", "LT", "LV", "EE", "IE", "GR", "CY",
-        "MT", "LU"
-      ]
+      restriction_type = "none"
     }
   }
 
