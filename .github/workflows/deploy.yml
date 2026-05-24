@@ -59,6 +59,7 @@ jobs:
         run: |
           aws lambda update-function-configuration \
             --function-name "${{ env.FUNCTION_NAME }}" \
+            --handler index.handler \
             --environment "Variables={S3_BUCKET='${S3_BUCKET}',FEEDS_CONFIG='${FEEDS_CONFIG}'}"
 
       - name: Build deployment package
