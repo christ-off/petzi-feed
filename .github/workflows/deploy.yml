@@ -57,10 +57,14 @@ jobs:
 
       - name: Configure Lambda environment
         run: |
+          ENV_JSON=$(jq -n \
+            --arg bucket "$S3_BUCKET" \
+            --arg feeds "$FEEDS_CONFIG" \
+            '{Variables: {S3_BUCKET: $bucket, FEEDS_CONFIG: $feeds}}')
           aws lambda update-function-configuration \
             --function-name "${{ env.FUNCTION_NAME }}" \
-            --handler index.handler \
-            --environment "Variables={S3_BUCKET='${S3_BUCKET}',FEEDS_CONFIG='${FEEDS_CONFIG}'}"
+            --handler src/handler.handler \
+            --environment "$ENV_JSON"
 
       - name: Build deployment package
         run: |
