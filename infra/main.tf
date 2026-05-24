@@ -225,9 +225,10 @@ resource "null_resource" "package" {
   provisioner "local-exec" {
     command = <<-EOT
       set -e
-      npm ci --omit=dev --prefix "${path.module}/.."
-      mkdir -p "${path.module}/../build"
       cd "${path.module}/.."
+      npm ci --omit=dev
+      rm -rf build
+      mkdir -p build
       zip -qr build/function.zip src/ node_modules/ package.json --exclude "*.DS_Store"
     EOT
   }
