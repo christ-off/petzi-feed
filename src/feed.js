@@ -6,7 +6,7 @@
  * @param {string} siteUrl - Venue website URL for the alternate link
  * @returns {string}
  */
-export function buildAtomFeed(events, feedUrl, venueName = "Pont Rouge", siteUrl = "https://www.petzi.ch") {
+function buildAtomFeed(events, feedUrl, venueName = "Pont Rouge", siteUrl = "https://www.petzi.ch") {
   const updated = new Date().toISOString();
   const resolvedSiteUrl = siteUrl ?? "https://www.petzi.ch";
 
@@ -36,7 +36,10 @@ function buildEntry(event) {
 
   const priceHtml = price ? `<p><strong>Prix:</strong> ${esc(price)}</p>` : "";
   const body = description.replaceAll("\n\n", "</p><p>");
-  const contentHtml = esc(`${priceHtml}<p>${body}</p>`);
+  const genresHtml = genres.length
+    ? `<ul class="categories">${genres.map((g) => `<li>${esc(g)}</li>`).join("")}</ul>`
+    : "";
+  const contentHtml = esc(`${priceHtml}<p>${body}</p>${genresHtml}`);
 
   const categoryTags = genres.length
     ? genres.map((g) => `    <category term="${esc(g)}"/>`).join("\n")
@@ -62,3 +65,5 @@ function esc(str) {
     .replaceAll(">", "&gt;")
     .replaceAll('"', "&quot;");
 }
+
+module.exports = { buildAtomFeed };
