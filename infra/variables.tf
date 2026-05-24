@@ -31,7 +31,7 @@ variable "lambda_timeout" {
 variable "feeds_config" {
   description = "JSON array of feed configurations"
   type        = string
-  default     = "[{\"organiserUrl\":\"https://www.petzi.ch/fr/organiser/143/\",\"s3Key\":\"feeds/pont-rouge-atom.xml\"}]"
+  default     = "[{\"organiserUrl\":\"https://www.petzi.ch/fr/organiser/143/\",\"s3Key\":\"feeds/pont-rouge-atom.xml\"},{\"organiserUrl\":\"https://www.petzi.ch/fr/organiser/11/\",\"s3Key\":\"feeds/ptr-usine-atom.xml\"}]"
 }
 
 variable "feed_url" {
