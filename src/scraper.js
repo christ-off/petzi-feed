@@ -1,4 +1,4 @@
-import { parse } from "node-html-parser";
+const { parse } = require("node-html-parser");
 
 const BASE_URL = "https://www.petzi.ch";
 
@@ -29,7 +29,7 @@ const BOILERPLATE = /PETZI\s*[-–]|Design by KANULART/i;
  * @param {typeof fetch} fetcher
  * @returns {Promise<string[]>}
  */
-export async function getEventUrls(fetcher = fetch, organiserUrl = DEFAULT_ORGANISER_URL) {
+async function getEventUrls(fetcher = fetch, organiserUrl = DEFAULT_ORGANISER_URL) {
   const resp = await fetcher(organiserUrl, { headers: HEADERS });
   if (!resp.ok) throw new Error(`HTTP ${resp.status} on organiser page`);
 
@@ -54,7 +54,7 @@ export async function getEventUrls(fetcher = fetch, organiserUrl = DEFAULT_ORGAN
  * @param {typeof fetch} fetcher
  * @returns {Promise<Event|null>}
  */
-export async function parseEvent(url, fetcher = fetch) {
+async function parseEvent(url, fetcher = fetch) {
   const resp = await fetcher(url, { headers: HEADERS });
   if (!resp.ok) throw new Error(`HTTP ${resp.status} on ${url}`);
 
@@ -104,7 +104,7 @@ export async function parseEvent(url, fetcher = fetch) {
  * @param {typeof fetch} fetcher
  * @returns {Promise<Event[]>}
  */
-export async function fetchAllEvents(fetcher = fetch, organiserUrl = DEFAULT_ORGANISER_URL) {
+async function fetchAllEvents(fetcher = fetch, organiserUrl = DEFAULT_ORGANISER_URL) {
   const urls = await getEventUrls(fetcher, organiserUrl);
 
   const results = await Promise.allSettled(
@@ -122,7 +122,7 @@ export async function fetchAllEvents(fetcher = fetch, organiserUrl = DEFAULT_ORG
  * @param {string} organiserUrl
  * @returns {Promise<{ venueName: string, siteUrl: string }>}
  */
-export async function fetchVenueMetadata(organiserUrl, fetcher = fetch) {
+async function fetchVenueMetadata(organiserUrl, fetcher = fetch) {
   const resp = await fetcher(organiserUrl, { headers: HEADERS });
   if (!resp.ok) throw new Error(`HTTP ${resp.status} fetching metadata from ${organiserUrl}`);
 
@@ -151,3 +151,5 @@ function parseDateFromGcal(root) {
 function parseDateFromHeading(root) {
   return root.querySelector("h3")?.text?.trim() ?? null;
 }
+
+module.exports = { getEventUrls, parseEvent, fetchAllEvents, fetchVenueMetadata };

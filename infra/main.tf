@@ -237,7 +237,7 @@ resource "null_resource" "package" {
 resource "aws_lambda_function" "petzi_feed" {
   function_name    = var.lambda_function_name
   role             = aws_iam_role.petzi_feed_lambda.arn
-  handler          = "index.handler"
+  handler          = "src/handler.handler"
   runtime          = "nodejs22.x"
   memory_size      = var.lambda_memory_size
   timeout          = var.lambda_timeout
