@@ -119,11 +119,11 @@ describe("filterEvents", () => {
 
 describe("parseGenres", () => {
   it("returns default when input is undefined", () => {
-    expect(parseGenres(undefined)).toEqual(["Metal", "Rock"]);
+    expect(parseGenres(undefined)).toEqual(["Metal", "Alternatif"]);
   });
 
   it("returns default when input is null", () => {
-    expect(parseGenres(null)).toEqual(["Metal", "Rock"]);
+    expect(parseGenres(null)).toEqual(["Metal", "Alternatif"]);
   });
 
   it("parses comma-separated list", () => {
