@@ -15,7 +15,7 @@ env:
   S3_BUCKET: my-petzi-feed
   FEEDS_CONFIG: '[
       {"organiserUrl":"https://www.petzi.ch/fr/organiser/143/","s3Key":"feeds/pont-rouge-atom.xml"},
-      {"organiserUrl":"https://www.petzi.ch/fr/organiser/11/","s3Key":"feeds/ptr-usine-atom.xml"}
+      {"organiserUrl":"https://www.petzi.ch/fr/organiser/11/","s3Key":"feeds/ptr-usine-atom.xml"},
       {"organiserUrl":"https://www.petzi.ch/fr/organiser/54/","s3Key":"feeds/docks-atom.xml"}
     ]'
 
