@@ -8,7 +8,7 @@ function createS3Client() {
   return new S3Client({ region: process.env.AWS_REGION ?? "eu-west-3" });
 }
 
-const DEFAULT_GENRES = ["Metal", "Rock"];
+const DEFAULT_GENRES = ["Metal", "Alternatif"];
 
 function filterEvents(events, genres) {
   if (!genres || genres.length === 0) throw new Error("genres filter cannot be empty");
