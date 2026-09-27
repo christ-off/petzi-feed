@@ -46,8 +46,17 @@ describe("buildAtomFeed", () => {
     expect(xml).toContain("<author><name>Pont Rouge</name></author>");
   });
 
-  it("includes event title", () => {
+  it("includes event title with date suffix", () => {
     const xml = buildAtomFeed([MOCK_EVENT], "https://example.com/atom.xml", venueName);
+    expect(xml).toContain("<title>High Vis + Support - 02/06/2026</title>");
+  });
+
+  it("omits date suffix when dateIso is not parseable", () => {
+    const xml = buildAtomFeed(
+      [{ ...MOCK_EVENT, dateIso: "TBA" }],
+      "https://example.com/atom.xml",
+      venueName
+    );
     expect(xml).toContain("<title>High Vis + Support</title>");
   });
 
@@ -74,7 +83,7 @@ describe("buildAtomFeed", () => {
       "https://example.com/atom.xml",
       venueName
     );
-    expect(xml).toContain("AC/DC &amp; Friends &lt;Tour&gt;");
+    expect(xml).toContain("AC/DC &amp; Friends &lt;Tour&gt; - 02/06/2026");
   });
 
   it("includes category elements for genres", () => {

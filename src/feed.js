@@ -26,6 +26,9 @@ ${events.map(buildEntry).join("\n")}
 function buildEntry(event) {
   const { title, dateIso, description, imageUrl, eventUrl, ticketUrl, price, genres } = event;
 
+  const formattedDate = formatDateDdMmYyyy(dateIso);
+  const entryTitle = formattedDate ? `${title} - ${formattedDate}` : title;
+
   const imageTag = imageUrl
     ? `    <media:content url="${esc(imageUrl)}" medium="image"/>`
     : "";
@@ -46,7 +49,7 @@ function buildEntry(event) {
     : "";
 
   return `  <entry>
-    <title>${esc(title)}</title>
+    <title>${esc(entryTitle)}</title>
     <id>${esc(eventUrl)}</id>
     <link href="${esc(eventUrl)}" rel="alternate"/>
     ${ticketTag}
@@ -56,6 +59,13 @@ function buildEntry(event) {
     <content type="html">${contentHtml}</content>
     ${imageTag}
   </entry>`;
+}
+
+function formatDateDdMmYyyy(dateIso) {
+  const match = /^(\d{4})-(\d{2})-(\d{2})/.exec(dateIso ?? "");
+  if (!match) return null;
+  const [, year, month, day] = match;
+  return `${day}/${month}/${year}`;
 }
 
 function esc(str) {
