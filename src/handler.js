@@ -10,12 +10,13 @@ function createS3Client() {
 
 const DEFAULT_GENRES = ["Metal", "Alternatif"];
 const EXCLUDED_GENRES = ["Punk"];
+const EXCLUDED_GENRES_LOWER = EXCLUDED_GENRES.map((s) => s.toLowerCase());
 
-function matchesTagFilter(event, lower, excludedLower) {
+function matchesTagFilter(event, lower) {
   return (
     event.genres.includes("Concert") &&
     event.genres.some((g) => lower.includes(g.toLowerCase())) &&
-    !event.genres.some((g) => excludedLower.includes(g.toLowerCase()))
+    !event.genres.some((g) => EXCLUDED_GENRES_LOWER.includes(g.toLowerCase()))
   );
 }
 
@@ -26,10 +27,7 @@ function mentionsMetal(event) {
 function filterEvents(events, genres) {
   if (!genres || genres.length === 0) throw new Error("genres filter cannot be empty");
   const lower = genres.map((s) => s.toLowerCase());
-  const excludedLower = EXCLUDED_GENRES.map((s) => s.toLowerCase());
-  return events.filter(
-    (e) => matchesTagFilter(e, lower, excludedLower) || mentionsMetal(e)
-  );
+  return events.filter((e) => matchesTagFilter(e, lower) || mentionsMetal(e));
 }
 
 function parseGenres(raw) {
