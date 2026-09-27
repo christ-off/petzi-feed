@@ -11,14 +11,25 @@ function createS3Client() {
 const DEFAULT_GENRES = ["Metal", "Alternatif"];
 const EXCLUDED_GENRES = ["Punk"];
 
+function matchesTagFilter(event, lower, excludedLower) {
+  return (
+    event.genres.includes("Concert") &&
+    event.genres.some((g) => lower.includes(g.toLowerCase())) &&
+    !event.genres.some((g) => excludedLower.includes(g.toLowerCase()))
+  );
+}
+
+function mentionsMetal(event) {
+  return Boolean(event.description?.toLowerCase().includes("métal"));
+}
+
 function filterEvents(events, genres) {
   if (!genres || genres.length === 0) throw new Error("genres filter cannot be empty");
   const lower = genres.map((s) => s.toLowerCase());
   const excludedLower = EXCLUDED_GENRES.map((s) => s.toLowerCase());
-  return events
-    .filter((e) => e.genres.includes("Concert"))
-    .filter((e) => e.genres.some((g) => lower.includes(g.toLowerCase())))
-    .filter((e) => !e.genres.some((g) => excludedLower.includes(g.toLowerCase())));
+  return events.filter(
+    (e) => matchesTagFilter(e, lower, excludedLower) || mentionsMetal(e)
+  );
 }
 
 function parseGenres(raw) {

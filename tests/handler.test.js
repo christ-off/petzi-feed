@@ -120,6 +120,28 @@ describe("filterEvents", () => {
     expect(EXCLUDED_GENRES).toEqual(["Punk"]);
   });
 
+  it("keeps an untagged event when its description mentions métal", () => {
+    const events = [
+      { title: "Undertown", genres: [], description: "Soirée métal, plus d'infos à suivre" },
+    ];
+    expect(filterEvents(events, ["Metal"])).toEqual(events);
+  });
+
+  it("matches métal in the description case-insensitively", () => {
+    const events = [{ title: "Undertown", genres: [], description: "Soirée MÉTAL ce soir" }];
+    expect(filterEvents(events, ["Metal"])).toEqual(events);
+  });
+
+  it("drops an untagged event whose description does not mention métal", () => {
+    const events = [{ title: "Jazz Night", genres: [], description: "Une soirée jazz" }];
+    expect(filterEvents(events, ["Metal"])).toEqual([]);
+  });
+
+  it("drops an untagged event with no description at all", () => {
+    const events = [{ title: "Mystery Show", genres: [] }];
+    expect(filterEvents(events, ["Metal"])).toEqual([]);
+  });
+
   it("filters by multiple genres correctly", () => {
     const events = [
       { title: "Metal", genres: ["Concert", "Metal"] },
