@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
-import { parseFeedsConfig, buildFeedUrl, filterEvents, parseGenres, DEFAULT_GENRES, createHandler } from "../src/handler.js";
+import { parseFeedsConfig, buildFeedUrl, filterEvents, parseGenres, DEFAULT_GENRES, EXCLUDED_GENRES, createHandler } from "../src/handler.js";
 
 function createMockS3(sendFn) {
   return { send: sendFn ?? vi.fn().mockResolvedValue({}) };
@@ -99,11 +99,25 @@ describe("filterEvents", () => {
   it("keeps event matching any genre in the filter list", () => {
     const events = [
       { title: "Rock Show", genres: ["Concert", "Rock"] },
-      { title: "Punk Show", genres: ["Concert", "Punk"] },
+      { title: "Ska Show", genres: ["Concert", "Ska"] },
       { title: "Jazz Night", genres: ["Concert", "Jazz"] },
     ];
     expect(filterEvents(events, ["Metal", "Rock"])).toHaveLength(1);
-    expect(filterEvents(events, ["Metal", "Punk"])).toHaveLength(1);
+    expect(filterEvents(events, ["Metal", "Ska"])).toHaveLength(1);
+  });
+
+  it("drops event with an excluded genre even if it matches an included genre", () => {
+    const events = [{ title: "Punk Show", genres: ["Concert", "Metal", "Punk"] }];
+    expect(filterEvents(events, ["Metal"])).toEqual([]);
+  });
+
+  it("drops excluded genre case-insensitively", () => {
+    const events = [{ title: "Punk Show", genres: ["Concert", "Metal", "punk"] }];
+    expect(filterEvents(events, ["Metal"])).toEqual([]);
+  });
+
+  it("exposes EXCLUDED_GENRES", () => {
+    expect(EXCLUDED_GENRES).toEqual(["Punk"]);
   });
 
   it("filters by multiple genres correctly", () => {
@@ -293,14 +307,14 @@ describe("handler — multi-feed loop", () => {
     process.env.S3_KEY = "legacy/atom.xml";
     process.env.PETZI_ORGANISER_URL = "https://petzi.ch/org/143/";
     process.env.VENUE_NAME = "Pont Rouge";
-    process.env.GENRES = "Punk";
+    process.env.GENRES = "Jazz";
 
     const s3Send = vi.fn().mockResolvedValue({});
     const handler = createTestHandler(s3Send, {
       fetchVenueMetadata: vi.fn(),
       fetchAllEvents: vi.fn().mockResolvedValue([
         { title: "Metal Show", genres: ["Concert", "Metal"] },
-        { title: "Punk Show", genres: ["Concert", "Punk"] },
+        { title: "Jazz Night", genres: ["Concert", "Jazz"] },
       ]),
     }, { buildAtomFeed: vi.fn().mockReturnValue("<atom/>") });
 

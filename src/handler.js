@@ -9,13 +9,16 @@ function createS3Client() {
 }
 
 const DEFAULT_GENRES = ["Metal", "Alternatif"];
+const EXCLUDED_GENRES = ["Punk"];
 
 function filterEvents(events, genres) {
   if (!genres || genres.length === 0) throw new Error("genres filter cannot be empty");
   const lower = genres.map((s) => s.toLowerCase());
+  const excludedLower = EXCLUDED_GENRES.map((s) => s.toLowerCase());
   return events
     .filter((e) => e.genres.includes("Concert"))
-    .filter((e) => e.genres.some((g) => lower.includes(g.toLowerCase())));
+    .filter((e) => e.genres.some((g) => lower.includes(g.toLowerCase())))
+    .filter((e) => !e.genres.some((g) => excludedLower.includes(g.toLowerCase())));
 }
 
 function parseGenres(raw) {
@@ -112,4 +115,4 @@ function createHandler(handlerDeps = {}) {
 
 const handler = createHandler();
 
-module.exports = { DEFAULT_GENRES, filterEvents, parseGenres, parseFeedsConfig, buildFeedUrl, handler, createHandler };
+module.exports = { DEFAULT_GENRES, EXCLUDED_GENRES, filterEvents, parseGenres, parseFeedsConfig, buildFeedUrl, handler, createHandler };
