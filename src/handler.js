@@ -15,9 +15,12 @@ const EXCLUDED_GENRES_LOWER = EXCLUDED_GENRES.map((s) => s.toLowerCase());
 function matchesTagFilter(event, lower) {
   return (
     event.genres.includes("Concert") &&
-    event.genres.some((g) => lower.includes(g.toLowerCase())) &&
-    !event.genres.some((g) => EXCLUDED_GENRES_LOWER.includes(g.toLowerCase()))
+    event.genres.some((g) => lower.includes(g.toLowerCase()))
   );
+}
+
+function hasExcludedGenre(event) {
+  return event.genres.some((g) => EXCLUDED_GENRES_LOWER.includes(g.toLowerCase()));
 }
 
 function mentionsMetal(event) {
@@ -27,7 +30,7 @@ function mentionsMetal(event) {
 function filterEvents(events, genres) {
   if (!genres || genres.length === 0) throw new Error("genres filter cannot be empty");
   const lower = genres.map((s) => s.toLowerCase());
-  return events.filter((e) => matchesTagFilter(e, lower) || mentionsMetal(e));
+  return events.filter((e) => (matchesTagFilter(e, lower) || mentionsMetal(e)) && !hasExcludedGenre(e));
 }
 
 function parseGenres(raw) {

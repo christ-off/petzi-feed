@@ -116,6 +116,11 @@ describe("filterEvents", () => {
     expect(filterEvents(events, ["Metal"])).toEqual([]);
   });
 
+  it("drops an excluded-genre event even when its description mentions métal", () => {
+    const events = [{ title: "Punk Show", genres: ["Punk"], description: "Soirée métal" }];
+    expect(filterEvents(events, ["Metal"])).toEqual([]);
+  });
+
   it("exposes EXCLUDED_GENRES", () => {
     expect(EXCLUDED_GENRES).toEqual(["Punk"]);
   });
